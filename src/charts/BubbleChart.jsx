@@ -1,18 +1,20 @@
-import {
-  ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-} from 'recharts'
-import { COLORS, axisStyle, gridStyle, tooltipStyle } from './theme'
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { COLORS, getChartTheme } from './theme'
+import { useTheme } from '../ThemeContext'
 
-function BubbleLabel({ cx, cy, name }) {
-  if (!name) return null
+function BubbleLabel(props) {
+  const { cx, cy, label } = props
+  if (!label) return null
   return (
     <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize={11} fontWeight={500} style={{ pointerEvents: 'none' }}>
-      {name.length > 6 ? name.slice(0, 5) + '…' : name}
+      {label.length > 6 ? label.slice(0, 5) + '…' : label}
     </text>
   )
 }
 
 export default function BubbleChart({ data, spec }) {
+  const { t } = useTheme()
+  const { axisStyle, gridStyle, tooltipStyle } = getChartTheme(t)
   const colorKey = spec.color
 
   function buildGroups() {
@@ -44,34 +46,13 @@ export default function BubbleChart({ data, spec }) {
     <ResponsiveContainer width="100%" height={460}>
       <ScatterChart margin={{ top: 60, right: 60, left: 10, bottom: 60 }}>
         <CartesianGrid {...gridStyle} />
-        <XAxis
-          type="number"
-          dataKey="x"
-          name={spec.x}
-          {...axisStyle}
-          label={{ value: spec.x_label, position: 'insideBottom', offset: -40, fill: '#6e7681', fontSize: 12 }}
-        />
-        <YAxis
-          type="number"
-          dataKey="y"
-          name={spec.y}
-          {...axisStyle}
-          label={{ value: spec.y_label, angle: -90, position: 'insideLeft', fill: '#6e7681', fontSize: 12 }}
-        />
+        <XAxis type="number" dataKey="x" name={spec.x} {...axisStyle} label={{ value: spec.x_label, position: 'insideBottom', offset: -40, fill: t.axisColor, fontSize: 12 }} />
+        <YAxis type="number" dataKey="y" name={spec.y} {...axisStyle} label={{ value: spec.y_label, angle: -90, position: 'insideLeft', fill: t.axisColor, fontSize: 12 }} />
         <ZAxis type="number" dataKey="z" range={zRange} name={spec.size ?? 'size'} />
-        <Tooltip {...tooltipStyle} cursor={{ strokeDasharray: '4 4', stroke: '#30363d' }} />
-        {groups.length > 1 && (
-          <Legend wrapperStyle={{ color: '#8b949e', fontSize: 12, paddingTop: 8, marginTop: 8 }} />
-        )}
+        <Tooltip {...tooltipStyle} cursor={{ strokeDasharray: '4 4', stroke: t.border2 }} />
+        {groups.length > 1 && <Legend wrapperStyle={{ color: t.textMuted, fontSize: 12, paddingTop: 8 }} />}
         {groups.map(g => (
-          <Scatter
-            key={g.name}
-            name={g.name}
-            data={g.data}
-            fill={g.color}
-            fillOpacity={0.7}
-            label={<BubbleLabel />}
-          />
+          <Scatter key={g.name} name={g.name} data={g.data} fill={g.color} fillOpacity={0.7} label={<BubbleLabel />} />
         ))}
       </ScatterChart>
     </ResponsiveContainer>

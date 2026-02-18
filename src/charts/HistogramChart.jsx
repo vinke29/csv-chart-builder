@@ -1,7 +1,6 @@
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts'
-import { COLORS, axisStyle, gridStyle, tooltipStyle } from './theme'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { COLORS, getChartTheme } from './theme'
+import { useTheme } from '../ThemeContext'
 
 function buildBins(data, key, binCount = 20) {
   const vals = data.map(r => Number(r[key])).filter(v => !isNaN(v))
@@ -21,13 +20,15 @@ function buildBins(data, key, binCount = 20) {
 }
 
 export default function HistogramChart({ data, spec }) {
+  const { t } = useTheme()
+  const { axisStyle, gridStyle, tooltipStyle } = getChartTheme(t)
   const bins = buildBins(data, spec.x)
   return (
     <ResponsiveContainer width="100%" height={420}>
       <BarChart data={bins} margin={{ top: 20, right: 30, left: 10, bottom: 60 }} barCategoryGap={1}>
         <CartesianGrid {...gridStyle} />
-        <XAxis dataKey="range" {...axisStyle} angle={-35} textAnchor="end" interval={2} label={{ value: spec.x_label, position: 'insideBottom', offset: -45, fill: '#6e7681', fontSize: 12 }} />
-        <YAxis {...axisStyle} label={{ value: 'Count', angle: -90, position: 'insideLeft', fill: '#6e7681', fontSize: 12 }} />
+        <XAxis dataKey="range" {...axisStyle} angle={-35} textAnchor="end" interval={2} label={{ value: spec.x_label, position: 'insideBottom', offset: -45, fill: t.axisColor, fontSize: 12 }} />
+        <YAxis {...axisStyle} label={{ value: 'Count', angle: -90, position: 'insideLeft', fill: t.axisColor, fontSize: 12 }} />
         <Tooltip {...tooltipStyle} />
         <Bar dataKey="count" fill={COLORS[4]} radius={[2, 2, 0, 0]} />
       </BarChart>

@@ -3,35 +3,43 @@ import Upload from './Upload'
 import ChartRenderer from './ChartRenderer'
 import Controls from './Controls'
 import { parseAndClean, analyzeWithClaude } from './Analyzer'
+import { useTheme } from './ThemeContext'
 
 const SCREEN = { UPLOAD: 'upload', LOADING: 'loading', RESULTS: 'results' }
 
-function LoadingScreen({ step }) {
-  const steps = ['Parsing CSV', 'Asking Claude to analyze']
+function ThemeToggle() {
+  const { isDark, toggle, t } = useTheme()
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ backgroundColor: '#0d1117' }}>
+    <button
+      onClick={toggle}
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="rounded-lg p-2 transition-colors"
+      style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, color: t.textMuted }}
+    >
+      {isDark ? (
+        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364-.707.707M6.343 17.657l-.707.707m12.728 0-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7z" /></svg>
+      ) : (
+        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+      )}
+    </button>
+  )
+}
+
+function LoadingScreen() {
+  const { t } = useTheme()
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ backgroundColor: t.bg }}>
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 rounded-full border-2 animate-spin" style={{ borderColor: '#4a90d9', borderTopColor: 'transparent' }} />
-        <p className="text-white font-medium">Analyzing your data…</p>
-      </div>
-      <div className="flex gap-3">
-        {steps.map((s, i) => (
-          <div key={s} className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-full" style={{
-            backgroundColor: step > i ? 'rgba(76,175,110,0.15)' : step === i ? 'rgba(74,144,217,0.15)' : '#161b22',
-            color: step > i ? '#4caf6e' : step === i ? '#4a90d9' : '#6e7681',
-            border: `1px solid ${step > i ? 'rgba(76,175,110,0.3)' : step === i ? 'rgba(74,144,217,0.3)' : '#21262d'}`,
-          }}>
-            {step > i ? '✓ ' : ''}{s}
-          </div>
-        ))}
+        <p className="font-medium" style={{ color: t.text }}>Analyzing your data…</p>
       </div>
     </div>
   )
 }
 
 export default function App() {
+  const { t } = useTheme()
   const [screen, setScreen] = useState(SCREEN.UPLOAD)
-  const [loadingStep, setLoadingStep] = useState(0)
   const [data, setData] = useState(null)
   const [columns, setColumns] = useState([])
   const [spec, setSpec] = useState(null)
@@ -43,7 +51,6 @@ export default function App() {
     if (errMsg) { setUploadError(errMsg); return }
     setUploadError(null)
     setScreen(SCREEN.LOADING)
-    setLoadingStep(0)
 
     let parsed
     try {
@@ -58,7 +65,6 @@ export default function App() {
       return
     }
 
-    setLoadingStep(1)
     setTruncated(parsed.truncated)
 
     let chartSpec
@@ -76,7 +82,7 @@ export default function App() {
         reasoning: null,
       }
       if (err.message === 'NO_API_KEY') {
-        setAnalysisError('No API key found. Add your key to the .env file and restart the dev server. Showing manual controls below.')
+        setAnalysisError('No API key found. Add your key to the .env file and restart the dev server.')
       } else {
         setAnalysisError('Analysis failed. You can pick a chart type manually below.')
       }
@@ -96,22 +102,24 @@ export default function App() {
     setTruncated(false)
     setAnalysisError(null)
     setUploadError(null)
-    setLoadingStep(0)
   }
 
   if (screen === SCREEN.UPLOAD) return <Upload onFile={handleFile} error={uploadError} />
-  if (screen === SCREEN.LOADING) return <LoadingScreen step={loadingStep} />
+  if (screen === SCREEN.LOADING) return <LoadingScreen />
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ backgroundColor: '#0d1117' }}>
+    <div className="min-h-screen px-4 py-8" style={{ backgroundColor: t.bg }}>
       <div className="max-w-6xl mx-auto">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-white">{spec.title || 'Chart'}</h1>
-          {truncated && (
-            <span className="text-xs px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(232,148,58,0.15)', color: '#e8943a', border: '1px solid rgba(232,148,58,0.3)' }}>
-              Dataset truncated to 5,000 rows
-            </span>
-          )}
+          <h1 className="text-xl font-bold" style={{ color: t.text }}>{spec.title || 'Chart'}</h1>
+          <div className="flex items-center gap-3">
+            {truncated && (
+              <span className="text-xs px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(232,148,58,0.15)', color: '#e8943a', border: '1px solid rgba(232,148,58,0.3)' }}>
+                Dataset truncated to 5,000 rows
+              </span>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
@@ -121,11 +129,9 @@ export default function App() {
                 {analysisError}
               </div>
             )}
-
-            <div className="rounded-xl p-4" style={{ backgroundColor: '#161b22', border: '1px solid #21262d' }}>
+            <div className="rounded-xl p-4" style={{ backgroundColor: t.card, border: `1px solid ${t.border}` }}>
               <ChartRenderer data={data} spec={spec} />
             </div>
-
           </div>
 
           <div className="w-full lg:w-64 shrink-0">
