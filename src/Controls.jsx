@@ -1,5 +1,30 @@
 const CHART_TYPES = ['bar', 'grouped_bar', 'line', 'scatter', 'bubble', 'histogram', 'pie']
 
+const inputStyle = {
+  backgroundColor: '#161b22',
+  border: '1px solid #30363d',
+  color: '#e6edf3',
+  borderRadius: 6,
+  padding: '6px 10px',
+  fontSize: 13,
+  outline: 'none',
+  width: '100%',
+}
+
+function TextInput({ label, value, onChange }) {
+  return (
+    <div>
+      <label className="block text-xs mb-1" style={{ color: '#6e7681' }}>{label}</label>
+      <input
+        type="text"
+        style={inputStyle}
+        value={value ?? ''}
+        onChange={e => onChange(e.target.value)}
+      />
+    </div>
+  )
+}
+
 const selectStyle = {
   backgroundColor: '#161b22',
   border: '1px solid #30363d',
@@ -53,6 +78,13 @@ export default function Controls({ spec, columns, onSpecChange, onReset }) {
       {(spec.chart_type === 'scatter' || spec.chart_type === 'bubble' || spec.chart_type === 'bar' || spec.chart_type === 'grouped_bar') && (
         <ColSelect label="Color / Group" value={spec.color} columns={columns} onChange={v => update('color', v)} nullable />
       )}
+
+      <hr style={{ borderColor: '#21262d' }} />
+
+      {/* Label editors */}
+      <TextInput label="Chart Title" value={spec.title} onChange={v => update('title', v)} />
+      <TextInput label="X Label" value={spec.x_label} onChange={v => update('x_label', v)} />
+      <TextInput label="Y Label" value={spec.y_label} onChange={v => update('y_label', v)} />
 
       <hr style={{ borderColor: '#21262d' }} />
 
