@@ -3,11 +3,19 @@ import { COLORS, getChartTheme } from './theme'
 import { useTheme } from '../ThemeContext'
 
 function BubbleLabel(props) {
-  const { cx, cy, label } = props
-  if (!label) return null
+  const { cx, cy, groupName } = props
+  if (!groupName) return null
   return (
-    <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize={11} fontWeight={500} style={{ pointerEvents: 'none' }}>
-      {label.length > 6 ? label.slice(0, 5) + '…' : label}
+    <text
+      x={cx}
+      y={cy - 14}
+      textAnchor="middle"
+      fill={props.fill}
+      fontSize={11}
+      fontWeight={600}
+      style={{ pointerEvents: 'none' }}
+    >
+      {groupName}
     </text>
   )
 }
@@ -21,7 +29,7 @@ export default function BubbleChart({ data, spec }) {
     if (!colorKey) {
       return [{
         name: null,
-        data: data.map(r => ({ x: r[spec.x], y: r[spec.y], z: r[spec.size] ?? 1, label: null })),
+        data: data.map(r => ({ x: r[spec.x], y: r[spec.y], z: r[spec.size] ?? 1, groupName: null })),
         color: COLORS[0],
       }]
     }
@@ -29,7 +37,7 @@ export default function BubbleChart({ data, spec }) {
     data.forEach(r => {
       const g = String(r[colorKey] ?? 'Other')
       if (!groups[g]) groups[g] = []
-      groups[g].push({ x: r[spec.x], y: r[spec.y], z: r[spec.size] ?? 1, label: g })
+      groups[g].push({ x: r[spec.x], y: r[spec.y], z: r[spec.size] ?? 1, groupName: g })
     })
     return Object.entries(groups).map(([name, pts], i) => ({ name, data: pts, color: COLORS[i % COLORS.length] }))
   }
@@ -51,8 +59,15 @@ export default function BubbleChart({ data, spec }) {
         <ZAxis type="number" dataKey="z" range={zRange} name={spec.size ?? 'size'} />
         <Tooltip {...tooltipStyle} cursor={{ strokeDasharray: '4 4', stroke: t.border2 }} />
         {groups.length > 1 && <Legend wrapperStyle={{ color: t.textMuted, fontSize: 12, paddingTop: 8 }} />}
-        {groups.map(g => (
-          <Scatter key={g.name} name={g.name} data={g.data} fill={g.color} fillOpacity={0.7} label={<BubbleLabel />} />
+        {groups.map((g, i) => (
+          <Scatter
+            key={g.name}
+            name={g.name}
+            data={g.data}
+            fill={g.color}
+            fillOpacity={0.7}
+            label={<BubbleLabel fill={COLORS[i % COLORS.length]} />}
+          />
         ))}
       </ScatterChart>
     </ResponsiveContainer>
