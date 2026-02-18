@@ -25,10 +25,8 @@ export default function BubbleChart({ data, spec }) {
   }
 
   const groups = buildGroups()
-  const allZ = data.map(r => r[spec.size]).filter(v => v != null && !isNaN(v))
-  const maxZ = allZ.length ? Math.max(...allZ) : 1
-  // scale range so area represents value (scaleSqrt equivalent)
-  const zRange = [10, Math.min(60, Math.max(20, Math.sqrt(maxZ / (data.length || 1)) * 40))]
+  // ZAxis range is pixel area — use a fixed large range so bubbles are visible
+  const zRange = [200, 4000]
 
   return (
     <ResponsiveContainer width="100%" height={420}>
