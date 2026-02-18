@@ -2,28 +2,34 @@ import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Leg
 import { COLORS, getChartTheme } from './theme'
 import { useTheme } from '../ThemeContext'
 
-function BubbleShape(props) {
-  const { cx, cy, r, fill, payload } = props
-  const name = payload?.groupName
-  const radius = r ?? 8
-  return (
-    <g>
-      <circle cx={cx} cy={cy} r={radius} fill={fill} fillOpacity={0.75} />
-      {name && (
-        <text
-          x={cx}
-          y={cy - radius - 5}
-          textAnchor="middle"
-          fill={fill}
-          fontSize={11}
-          fontWeight={600}
-          style={{ pointerEvents: 'none' }}
-        >
-          {name}
-        </text>
-      )}
-    </g>
-  )
+function makeBubbleShape(minZ, maxZ, minArea, maxArea) {
+  return function BubbleShape(props) {
+    const { cx, cy, fill, payload } = props
+    const z = payload?.z ?? minZ
+    // compute radius directly from z value so we control sizing
+    const t = maxZ > minZ ? (z - minZ) / (maxZ - minZ) : 0.5
+    const area = minArea + t * (maxArea - minArea)
+    const radius = Math.sqrt(area / Math.PI)
+    const name = payload?.groupName
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={radius} fill={fill} fillOpacity={0.75} />
+        {name && (
+          <text
+            x={cx}
+            y={cy - radius - 5}
+            textAnchor="middle"
+            fill={fill}
+            fontSize={11}
+            fontWeight={600}
+            style={{ pointerEvents: 'none' }}
+          >
+            {name}
+          </text>
+        )}
+      </g>
+    )
+  }
 }
 
 function BubbleTooltip({ active, payload, t, spec }) {
@@ -67,19 +73,20 @@ export default function BubbleChart({ data, spec }) {
   const minZ = allZ.length ? Math.min(...allZ) : 1
   const maxZ = allZ.length ? Math.max(...allZ) : 1
   const spread = maxZ / (minZ || 1)
-  const maxArea = spread > 50 ? 1200 : spread > 10 ? 2000 : 3000
-  const zRange = [100, maxArea]
+  const maxArea = spread > 50 ? 1800 : spread > 10 ? 2400 : 3200
+  const minArea = 120
+  const BubbleShape = makeBubbleShape(minZ, maxZ, minArea, maxArea)
 
   return (
-    <ResponsiveContainer width="100%" height={460}>
-      <ScatterChart margin={{ top: 60, right: 60, left: 10, bottom: 60 }}>
+    <ResponsiveContainer width="100%" height={480}>
+      <ScatterChart margin={{ top: 60, right: 60, left: 10, bottom: 80 }}>
         <CartesianGrid {...gridStyle} />
-        <XAxis type="number" dataKey="x" name={spec.x} {...axisStyle} label={{ value: spec.x_label, position: 'insideBottom', offset: -40, fill: t.axisColor, fontSize: 12 }} />
+        <XAxis type="number" dataKey="x" name={spec.x} {...axisStyle} label={{ value: spec.x_label, position: 'insideBottom', offset: -55, fill: t.axisColor, fontSize: 12 }} />
         <YAxis type="number" dataKey="y" name={spec.y} {...axisStyle} label={{ value: spec.y_label, angle: -90, position: 'insideLeft', fill: t.axisColor, fontSize: 12 }} />
-        <ZAxis type="number" dataKey="z" range={zRange} name={spec.size ?? 'size'} />
+        <ZAxis type="number" dataKey="z" range={[minArea, maxArea]} name={spec.size ?? 'size'} />
         <Tooltip content={<BubbleTooltip t={t} spec={spec} />} cursor={{ strokeDasharray: '4 4', stroke: t.border2 }} />
         {groups.length > 1 && <Legend wrapperStyle={{ color: t.textMuted, fontSize: 12, paddingTop: 8 }} />}
-        {groups.map((g, i) => (
+        {groups.map((g) => (
           <Scatter
             key={g.name}
             name={g.name}
