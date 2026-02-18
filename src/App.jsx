@@ -32,6 +32,7 @@ function LoadingScreen() {
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 rounded-full border-2 animate-spin" style={{ borderColor: '#4a90d9', borderTopColor: 'transparent' }} />
         <p className="font-medium" style={{ color: t.text }}>Analyzing your data…</p>
+        <p className="text-sm" style={{ color: t.textSubtle }}>Charging $2.99 to Dr. Dang…</p>
       </div>
     </div>
   )
