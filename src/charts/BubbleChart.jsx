@@ -2,27 +2,47 @@ import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Leg
 import { COLORS, getChartTheme } from './theme'
 import { useTheme } from '../ThemeContext'
 
-function BubbleLabel(props) {
-  const { cx, cy, groupName } = props
-  if (!groupName) return null
+function BubbleShape(props) {
+  const { cx, cy, r, fill, payload } = props
+  const name = payload?.groupName
+  const radius = r ?? 8
   return (
-    <text
-      x={cx}
-      y={cy - 14}
-      textAnchor="middle"
-      fill={props.fill}
-      fontSize={11}
-      fontWeight={600}
-      style={{ pointerEvents: 'none' }}
-    >
-      {groupName}
-    </text>
+    <g>
+      <circle cx={cx} cy={cy} r={radius} fill={fill} fillOpacity={0.75} />
+      {name && (
+        <text
+          x={cx}
+          y={cy - radius - 5}
+          textAnchor="middle"
+          fill={fill}
+          fontSize={11}
+          fontWeight={600}
+          style={{ pointerEvents: 'none' }}
+        >
+          {name}
+        </text>
+      )}
+    </g>
+  )
+}
+
+function BubbleTooltip({ active, payload, t, spec }) {
+  if (!active || !payload?.length) return null
+  const point = payload[0]?.payload
+  if (!point) return null
+  return (
+    <div style={{ backgroundColor: t.tooltipBg, border: `1px solid ${t.tooltipBorder}`, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: t.tooltipColor, lineHeight: 1.7 }}>
+      {point.groupName && <p style={{ fontWeight: 700, marginBottom: 4 }}>{point.groupName}</p>}
+      <p>{spec.x}: {point.x}</p>
+      <p>{spec.y}: {point.y}</p>
+      {spec.size && <p>{spec.size}: {point.z}</p>}
+    </div>
   )
 }
 
 export default function BubbleChart({ data, spec }) {
   const { t } = useTheme()
-  const { axisStyle, gridStyle, tooltipStyle } = getChartTheme(t)
+  const { axisStyle, gridStyle } = getChartTheme(t)
   const colorKey = spec.color
 
   function buildGroups() {
@@ -57,7 +77,7 @@ export default function BubbleChart({ data, spec }) {
         <XAxis type="number" dataKey="x" name={spec.x} {...axisStyle} label={{ value: spec.x_label, position: 'insideBottom', offset: -40, fill: t.axisColor, fontSize: 12 }} />
         <YAxis type="number" dataKey="y" name={spec.y} {...axisStyle} label={{ value: spec.y_label, angle: -90, position: 'insideLeft', fill: t.axisColor, fontSize: 12 }} />
         <ZAxis type="number" dataKey="z" range={zRange} name={spec.size ?? 'size'} />
-        <Tooltip {...tooltipStyle} cursor={{ strokeDasharray: '4 4', stroke: t.border2 }} />
+        <Tooltip content={<BubbleTooltip t={t} spec={spec} />} cursor={{ strokeDasharray: '4 4', stroke: t.border2 }} />
         {groups.length > 1 && <Legend wrapperStyle={{ color: t.textMuted, fontSize: 12, paddingTop: 8 }} />}
         {groups.map((g, i) => (
           <Scatter
@@ -65,8 +85,7 @@ export default function BubbleChart({ data, spec }) {
             name={g.name}
             data={g.data}
             fill={g.color}
-            fillOpacity={0.7}
-            label={<BubbleLabel fill={COLORS[i % COLORS.length]} />}
+            shape={<BubbleShape fill={g.color} />}
           />
         ))}
       </ScatterChart>
