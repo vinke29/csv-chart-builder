@@ -126,15 +126,6 @@ export default function App() {
               <ChartRenderer data={data} spec={spec} />
             </div>
 
-            {spec.reasoning && (
-              <div className="mt-4 rounded-xl px-5 py-4 flex gap-3" style={{ backgroundColor: '#161b22', border: '1px solid #21262d' }}>
-                <span className="text-lg shrink-0">💡</span>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#6e7681' }}>Claude's Reasoning</p>
-                  <p className="text-sm leading-relaxed" style={{ color: '#8b949e' }}>{spec.reasoning}</p>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="w-full lg:w-64 shrink-0">
