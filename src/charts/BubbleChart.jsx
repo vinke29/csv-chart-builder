@@ -25,12 +25,17 @@ export default function BubbleChart({ data, spec }) {
   }
 
   const groups = buildGroups()
-  // ZAxis range is pixel area — use a fixed large range so bubbles are visible
-  const zRange = [200, 4000]
+  // Scale max bubble area based on data spread to avoid giant outliers clipping
+  const allZ = data.map(r => r[spec.size]).filter(v => v != null && !isNaN(v))
+  const minZ = allZ.length ? Math.min(...allZ) : 1
+  const maxZ = allZ.length ? Math.max(...allZ) : 1
+  const spread = maxZ / (minZ || 1)
+  const maxArea = spread > 50 ? 1200 : spread > 10 ? 2000 : 3000
+  const zRange = [100, maxArea]
 
   return (
     <ResponsiveContainer width="100%" height={420}>
-      <ScatterChart margin={{ top: 20, right: 30, left: 10, bottom: 30 }}>
+      <ScatterChart margin={{ top: 60, right: 60, left: 10, bottom: 30 }}>
         <CartesianGrid {...gridStyle} />
         <XAxis type="number" dataKey="x" name={spec.x} {...axisStyle} label={{ value: spec.x_label, position: 'insideBottom', offset: -15, fill: '#6e7681', fontSize: 12 }} />
         <YAxis type="number" dataKey="y" name={spec.y} {...axisStyle} label={{ value: spec.y_label, angle: -90, position: 'insideLeft', fill: '#6e7681', fontSize: 12 }} />
